@@ -1,10 +1,10 @@
 # Assignment 1. Buffer Overflow Exploit Project
 
- Develop your own exploit for getscore.c for both Redhat8 and Redhat9. 
- You can either develop one exploit for each platform or a single exploit for both. 
- The RHL8 and RHL9 virtual machines are [here] (https://drive.google.com/drive/folders/0BzkPm4m1AGy4N3Z4TldfNXRudlU)
- The files getscore.c and score.txt are provided.
- Submit the source code of your exploit generator.
+> Develop your own exploit for getscore.c for both Redhat8 and Redhat9. 
+> You can either develop one exploit for each platform or a single exploit for both. 
+> The RHL8 and RHL9 virtual machines are [here](https://drive.google.com/drive/folders/0BzkPm4m1AGy4N3Z4TldfNXRudlU)
+> The files getscore.c and score.txt are provided.
+> Submit the source code of your exploit generator.
 
 Note that these RedHat versions do not have `yum` installed, and therefore, it is not possible to 
 install Python 2.7 or better (yes, they have Python 2.2; this made me realize the greatness in 
@@ -14,7 +14,7 @@ And sure, we could have installed `yum` and updated Python, but the professor wi
 with the original virtual machines that use Python 2.2.
 
 
-# getscore.c
+## getscore.c
 
 ```C
 #include <stdio.h>
@@ -100,7 +100,7 @@ char* str_prefix(char *prefix, char *str){
 
 ```
 
-# Exploit for RHL8
+## Exploit for RHL8
 
 Exploit:
 
@@ -162,7 +162,7 @@ I noticed that 0xbffff8ac was a good candidate. It was the value of $esp - 100.
 Therefore, the last four bytes of the exploit are “\xac\xf8\xff\xbf”.
 
 
-# Exploit for RHL9
+## Exploit for RHL9
 
 Exploit:
 
@@ -237,7 +237,7 @@ cat instructions.txt | tr -d " " | tr -d "\t" | grep ':jmp\*%esp' > jmp-esp-inst
 ```
 
 
-# Other Vulnerability in the Program: a bash injection
+## Other Vulnerability in the Program: a bash injection
 
 When getscore is logging failed attempts in error.log, it does so by executing the
 echo command with some arguments such as the name and the SSN that are formatted
