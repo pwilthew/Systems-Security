@@ -6,6 +6,14 @@
 > The files getscore.c and score.txt are provided.
 > Submit the source code of your exploit generator.
 
+## Goal
+
+Run the program as a non-privileged user and become root.
+
+## Notes
+
+The getscore binary should have permissions 755 (-rwsr-xr-x) with *setuid* enabled. *setuid* will allow us to escalate privileges when exploiting the binary.
+
 Note that these RedHat versions do not have `yum` installed, and therefore, it is not possible to 
 install Python 2.7 or better (yes, they have Python 2.2; this made me realize the greatness in 
 Python 2.7+). 
