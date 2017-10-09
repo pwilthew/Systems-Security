@@ -1,6 +1,6 @@
 # Exploiting a Buffer Overflow Vulnerability in the JNLP plugin within Internet Explorer 8 with using the Heap Spraying Technique
 
-** This is still a draft **
+**This is still a draft**
 
 JNLP (Java Network Launch Protocol) enables an application to be launched on a client desktop using resources that are hosted on a remote server. A specific version of JNLP for IE8 is vulnerable to a stack-based buffer overflow: when the plugin is invoked with a *launchjnlp* parameter, it will copy the value of the *docbase* parameter to a stack buffer using `sprintf`, but fails to check the length of the value. 
 
@@ -13,6 +13,9 @@ The vulnerability can be triggered by the following:
 ```
 
 ## Goal
+Input a sufficiently long string in the docbase value such that the register $eip gets ovewritten with an address known to contain our NOP sled and shellcode. Said shellcode establishes a reverse TCP connection to another machine.
+
+## How it's done
 
 To demonstrate this vulnerability, a simple web server is set up to listen on port 8080. This web server shows the contents of a specific directory in which the html file (containing the exploit) is located. The html file is clicked from the client and nothing appears to happen, but the truth is that the heap is sprayed with a shellcode! It is not until the client clicks on *Click Me* that at least one the shellcodes in the heap gets executed. This shellcode consists of several NOP operations and a reversed TCP connection to a chosen IP and port. The port used is *6666*, and to simplifly the assignment's grading, the chosen IP is 127.0.0.1, which means that the command prompt will be obtained in the client instead of in the attacker's machine (or Kali, in this case).
 
@@ -44,5 +47,38 @@ In the last command, **js_le** was used because a JavaScript shellcode is needed
 
 4. Windows debugger, WinDBG, is helpful to visualize the stack and heap contents and gather information for the exploit.
 
-5. 
+5. The script that sets up a web server is provided, and it looks like this:
 
+```python
+#!/usr/bin/python
+#
+# Python Web Server
+# Serves only static files
+#
+# by Saumil Shah
+
+import sys
+import BaseHTTPServer
+from SimpleHTTPServer import SimpleHTTPRequestHandler
+
+port = 8080
+
+class HandlerClass(SimpleHTTPRequestHandler):
+        # Disable DNS lookups
+        def address_string(self):
+                    return str(self.client_address[0])
+                    ServerClass = BaseHTTPServer.HTTPServer
+                    Protocol = "HTTP/1.0"
+                    server_address = ('0.0.0.0', port)
+                    HandlerClass.protocol_version = Protocol
+                    httpd = ServerClass(server_address, HandlerClass)
+    try:
+        sa = httpd.socket.getsockname()
+        print "Serving HTTP on", sa[0], "port", sa[1], "..."
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print 'Shutting down the web server'
+        httpd.socket.close()
+```
+
+6. To use the heap spraying technique, a string that follows the pattern "NOP Sled + Shellcode" is created in JavaScript. This string is successfully sprayed in the heap to occupy hundreds of megabytes. 
