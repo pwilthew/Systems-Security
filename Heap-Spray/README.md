@@ -1,5 +1,4 @@
 # Exploiting a Buffer Overflow Vulnerability in the JNLP plugin within Internet Explorer 8 with using the Heap Spraying Technique
-*This is still a draft*
 
 JNLP (Java Network Launch Protocol) enables an application to be launched on a client desktop using resources that are hosted on a remote server. A specific version of JNLP for IE8 is vulnerable to a stack-based buffer overflow: when the plugin is invoked with a **launchjnlp** parameter, it will copy the value of the **docbase** parameter to a stack buffer using `sprintf`, but fails to check the length of the value. 
 
