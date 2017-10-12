@@ -152,7 +152,7 @@ We have to make sure that our chosen address contains the NOP sled. Run `dc 09da
 
 3. Now that we have the address to jump to, we can append it to the end of the long string of repeated "A". This will be address that will override the value $eip. To execute the buffer overflow, we have to click on "Click Me," as the function trigger() is called immediately after doing so: `<input type="button" value="Click Me" onclick="trigger()">`
 
-Before clicking, we need to wait for incoming TCP connections in the Windows command prompt (as explain in #3 of **Specifics**).
+Before clicking, we need to wait for incoming TCP connections in the Windows command prompt (as explained in #3 of **Specifics**).
 
 ![alt text](https://github.com/pwilthew/Systems-Security/blob/master/Heap-Spray/Screen%20Shot%202017-10-08%20at%2018.21.55.png)
 
